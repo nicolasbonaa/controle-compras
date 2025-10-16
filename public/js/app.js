@@ -610,8 +610,7 @@ async function deleteSolicitacao(id) {
         //const csrfToken = document.querySelector('input[name="csrf_token"]').value;
 
         await makeRequest(`${API_BASE_URL}/solicitacoes/${id}`, {
-            method: 'DELETE',
-            body: JSON.stringify({ csrf_token: csrfToken })
+            method: 'DELETE'
         });
 
         showNotification('Solicitação excluída com sucesso!');
