@@ -168,6 +168,7 @@ const solicitacaoValidators = {
     
     updateStatus: [
         body('status')
+            .trim()
             .isIn(['Pendente', 'Em Andamento', 'Comprado', 'Cancelado'])
             .withMessage('Status é obrigatório e deve ser válido')
     ]

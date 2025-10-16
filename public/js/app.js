@@ -584,12 +584,13 @@ function closeAllStatusMenus() {
 }
 
 // Atualizar status
+// Em public/js/app.js
+
 async function updateStatus(id, status) {
     try {
-        //const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-
         await makeRequest(`${API_BASE_URL}/solicitacoes/${id}/status`, {
             method: 'PATCH',
+            body: JSON.stringify({ status }) // Apenas o status é enviado aqui
         });
 
         showNotification('Status atualizado com sucesso!');
@@ -602,17 +603,20 @@ async function updateStatus(id, status) {
 }
 
 // Excluir solicitação
+// Excluir solicitação
 async function deleteSolicitacao(id) {
+    // 1. Pede a confirmação do usuário
     if (!confirm('Tem certeza que deseja excluir esta solicitação? Esta ação não pode ser desfeita.')) {
         return;
     }
 
     try {
-
+        // 2. Chama a função makeRequest, que já cuida de tudo (método e token CSRF)
         await makeRequest(`${API_BASE_URL}/solicitacoes/${id}`, {
             method: 'DELETE'
         });
 
+        // 3. Mostra a notificação de sucesso e recarrega os dados
         showNotification('Solicitação excluída com sucesso!');
         loadSolicitacoes(currentPage, currentFilters);
         loadStats();
