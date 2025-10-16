@@ -588,7 +588,6 @@ async function updateStatus(id, status) {
 
         await makeRequest(`${API_BASE_URL}/solicitacoes/${id}/status`, {
             method: 'PATCH',
-            body: JSON.stringify({ status, csrf_token: csrfToken })
         });
 
         showNotification('Status atualizado com sucesso!');
@@ -607,7 +606,6 @@ async function deleteSolicitacao(id) {
     }
 
     try {
-        //const csrfToken = document.querySelector('input[name="csrf_token"]').value;
 
         await makeRequest(`${API_BASE_URL}/solicitacoes/${id}`, {
             method: 'DELETE'
