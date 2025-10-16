@@ -80,6 +80,12 @@ function setupEventListeners() {
             closeAllStatusMenus();
         }
     });
+
+    // Delegated event listener for the solicitacoes table
+    const solicitacoesTbody = document.getElementById('solicitacoes-tbody');
+    if (solicitacoesTbody) {
+        solicitacoesTbody.addEventListener('click', handleTableClick);
+    }
 }
 
 /**
@@ -117,11 +123,11 @@ function showNotification(message, type = 'success') {
 
     const notification = document.createElement('div');
     notification.className = `p-4 rounded-lg shadow-lg mb-4 ${
-        type === 'success' 
-            ? 'bg-green-100 text-green-800 border border-green-200' 
+        type === 'success'
+            ? 'bg-green-100 text-green-800 border border-green-200'
             : 'bg-red-100 text-red-800 border border-red-200'
     }`;
-    
+
     notification.innerHTML = `
         <div class="flex items-center">
             <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} mr-2"></i>
@@ -162,7 +168,7 @@ function renderStats(data) {
     if (!container) return;
 
     const { stats, total } = data;
-    
+
     const statusColors = {
         'Pendente': 'bg-yellow-100 text-yellow-800 border-yellow-200',
         'Em Andamento': 'bg-blue-100 text-blue-800 border-blue-200',
@@ -210,7 +216,7 @@ function renderStats(data) {
 async function loadSolicitacoes(page = 1, filters = {}) {
     try {
         showLoading();
-        
+
         const params = new URLSearchParams({
             page: page.toString(),
             limit: ITEMS_PER_PAGE.toString(),
@@ -219,10 +225,10 @@ async function loadSolicitacoes(page = 1, filters = {}) {
 
         const response = await makeRequest(`${API_BASE_URL}/solicitacoes?${params}`);
         renderSolicitacoes(response.data);
-        
+
         currentPage = page;
         currentFilters = filters;
-        
+
     } catch (error) {
         console.error('Erro ao carregar solicitações:', error);
         showError();
@@ -254,13 +260,13 @@ function showError() {
  */
 function renderSolicitacoes(data) {
     const { solicitacoes, pagination } = data;
-    
+
     document.getElementById('loading').classList.add('hidden');
-    
+
     // Atualizar contador
     const totalCount = document.getElementById('total-count');
     if (totalCount) {
-        const text = pagination.total_items > 0 
+        const text = pagination.total_items > 0
             ? `(${pagination.total_items} encontrada${pagination.total_items > 1 ? 's' : ''})`
             : '';
         totalCount.textContent = text;
@@ -294,7 +300,7 @@ function renderSolicitacaoRow(solicitacao) {
     const formattedDate = formatDate(solicitacao.data_solicitacao);
 
     return `
-        <tr class="hover:bg-gray-50">
+        <tr class="hover:bg-gray-50" data-solicitacao-id="${solicitacao.id}">
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                 #${solicitacao.id}
             </td>
@@ -315,28 +321,28 @@ function renderSolicitacaoRow(solicitacao) {
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
                 <div class="relative">
-                    <button onclick="toggleStatusMenu(${solicitacao.id})" 
+                    <button data-action="toggle-status-menu"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass} hover:opacity-80 transition-opacity">
                         ${escapeHtml(solicitacao.status)}
                         <i class="fas fa-chevron-down ml-1"></i>
                     </button>
                     <div id="status-menu-${solicitacao.id}" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 hidden">
                         <div class="py-1">
-                            <button onclick="updateStatus(${solicitacao.id}, 'Pendente')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Pendente</button>
-                            <button onclick="updateStatus(${solicitacao.id}, 'Em Andamento')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Em Andamento</button>
-                            <button onclick="updateStatus(${solicitacao.id}, 'Comprado')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Comprado</button>
-                            <button onclick="updateStatus(${solicitacao.id}, 'Cancelado')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Cancelado</button>
+                            <button data-action="update-status" data-status="Pendente" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Pendente</button>
+                            <button data-action="update-status" data-status="Em Andamento" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Em Andamento</button>
+                            <button data-action="update-status" data-status="Comprado" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Comprado</button>
+                            <button data-action="update-status" data-status="Cancelado" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Cancelado</button>
                         </div>
                     </div>
                 </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex space-x-2">
-                    <button onclick="editSolicitacao(${solicitacao.id})" 
+                    <button data-action="edit-solicitacao"
                             class="text-blue-600 hover:text-blue-900 transition-colors">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button onclick="deleteSolicitacao(${solicitacao.id})" 
+                    <button data-action="delete-solicitacao"
                             class="text-red-600 hover:text-red-900 transition-colors">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -361,7 +367,7 @@ function renderPagination(pagination) {
     let html = `
         <div class="flex items-center justify-between">
             <div class="text-sm text-gray-700">
-                Mostrando página ${pagination.current_page} de ${pagination.total_pages} 
+                Mostrando página ${pagination.current_page} de ${pagination.total_pages}
                 (${pagination.total_items} total)
             </div>
             <div class="flex space-x-2">
@@ -370,7 +376,7 @@ function renderPagination(pagination) {
     // Botão anterior
     if (pagination.has_previous) {
         html += `
-            <button onclick="loadSolicitacoes(${pagination.current_page - 1}, currentFilters)" 
+            <button onclick="loadSolicitacoes(${pagination.current_page - 1}, currentFilters)"
                     class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                 <i class="fas fa-chevron-left mr-1"></i>Anterior
             </button>
@@ -384,9 +390,9 @@ function renderPagination(pagination) {
     for (let i = startPage; i <= endPage; i++) {
         const isActive = i === pagination.current_page;
         html += `
-            <button onclick="loadSolicitacoes(${i}, currentFilters)" 
-                    class="px-3 py-2 text-sm ${isActive 
-                        ? 'bg-blue-600 text-white' 
+            <button onclick="loadSolicitacoes(${i}, currentFilters)"
+                    class="px-3 py-2 text-sm ${isActive
+                        ? 'bg-blue-600 text-white'
                         : 'bg-white text-gray-700 hover:bg-gray-50'} border border-gray-300 rounded-md">
                 ${i}
             </button>
@@ -396,7 +402,7 @@ function renderPagination(pagination) {
     // Botão próximo
     if (pagination.has_next) {
         html += `
-            <button onclick="loadSolicitacoes(${pagination.current_page + 1}, currentFilters)" 
+            <button onclick="loadSolicitacoes(${pagination.current_page + 1}, currentFilters)"
                     class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                 Próximo<i class="fas fa-chevron-right ml-1"></i>
             </button>
@@ -415,11 +421,37 @@ function renderPagination(pagination) {
 /**
  * Manipuladores de eventos
  */
+function handleTableClick(e) {
+    const target = e.target.closest('button');
+    if (!target) return;
+
+    const action = target.dataset.action;
+    if (!action) return;
+
+    const solicitacaoId = target.closest('tr').dataset.solicitacaoId;
+
+    switch (action) {
+        case 'toggle-status-menu':
+            toggleStatusMenu(solicitacaoId);
+            break;
+        case 'update-status':
+            const status = target.dataset.status;
+            updateStatus(solicitacaoId, status);
+            break;
+        case 'edit-solicitacao':
+            editSolicitacao(solicitacaoId);
+            break;
+        case 'delete-solicitacao':
+            deleteSolicitacao(solicitacaoId);
+            break;
+    }
+}
+
 
 // Criar solicitação
 async function handleCreateSubmit(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
 
@@ -441,10 +473,10 @@ async function handleCreateSubmit(e) {
 // Buscar solicitações
 function handleSearchSubmit(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(e.target);
     const filters = {};
-    
+
     for (const [key, value] of formData.entries()) {
         if (value.trim()) {
             filters[key] = value.trim();
@@ -486,7 +518,7 @@ async function editSolicitacao(id) {
 // Salvar edição
 async function handleEditSubmit(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
     const id = data.id;
@@ -537,7 +569,7 @@ function closeAllStatusMenus() {
 async function updateStatus(id, status) {
     try {
         const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-        
+
         await makeRequest(`${API_BASE_URL}/solicitacoes/${id}/status`, {
             method: 'PATCH',
             body: JSON.stringify({ status, csrf_token: csrfToken })
@@ -560,7 +592,7 @@ async function deleteSolicitacao(id) {
 
     try {
         const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-        
+
         await makeRequest(`${API_BASE_URL}/solicitacoes/${id}`, {
             method: 'DELETE',
             body: JSON.stringify({ csrf_token: csrfToken })
@@ -580,6 +612,9 @@ async function deleteSolicitacao(id) {
 
 // Escapar HTML
 function escapeHtml(text) {
+    if (text === null || text === undefined) {
+        return '';
+    }
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
@@ -588,7 +623,7 @@ function escapeHtml(text) {
 // Formatar data
 function formatDate(dateString) {
     if (!dateString) return '';
-    
+
     try {
         const date = new Date(dateString);
         return date.toLocaleString('pt-BR', {
