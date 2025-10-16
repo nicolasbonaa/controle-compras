@@ -54,18 +54,8 @@ const rateLimiters = {
  */
 const csrfProtection = (req, res, next) => {
     // Pular verificação CSRF para métodos GET, HEAD, OPTIONS
-    if (['GET', 'HEAD', 'OPTIONS', 'POST'].includes(req.method)) {
-        return next();
-    }
-
-    // Pular verificação CSRF para endpoints de health check
-    if (req.path === '/api/health') {
-        return next();
-    }
-
-    const token = req.body.csrf_token || req.headers['x-csrf-token'];
+    const token = req.body.csrf_token || req.headers['x-csrf-token']; // Esta linha já está correta
     const sessionToken = req.session?.csrfToken;
-
     if (!verifyCSRFToken(token, sessionToken)) {
         logError('Token CSRF inválido', { 
             ip: req.ip, 

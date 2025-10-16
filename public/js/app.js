@@ -91,15 +91,31 @@ function setupEventListeners() {
 /**
  * Fazer requisições AJAX
  */
+/**
+ * Fazer requisições AJAX
+ */
 async function makeRequest(url, options = {}) {
     try {
-        const defaultOptions = {
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        const defaultHeaders = {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': csrfToken // Adicione o token CSRF aqui
         };
 
+        const defaultOptions = {
+            headers: defaultHeaders
+        };
+
+        // Adicione o token ao corpo apenas se for um método que o suporte
+        if (options.method && !['GET', 'HEAD', 'OPTIONS'].includes(options.method.toUpperCase())) {
+            if (options.body) {
+                const bodyData = JSON.parse(options.body);
+                bodyData.csrf_token = csrfToken;
+                options.body = JSON.stringify(bodyData);
+            }
+        }
+        
         const response = await fetch(url, { ...defaultOptions, ...options });
         const data = await response.json();
 
@@ -568,7 +584,7 @@ function closeAllStatusMenus() {
 // Atualizar status
 async function updateStatus(id, status) {
     try {
-        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        //const csrfToken = document.querySelector('input[name="csrf_token"]').value;
 
         await makeRequest(`${API_BASE_URL}/solicitacoes/${id}/status`, {
             method: 'PATCH',
@@ -591,7 +607,7 @@ async function deleteSolicitacao(id) {
     }
 
     try {
-        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        //const csrfToken = document.querySelector('input[name="csrf_token"]').value;
 
         await makeRequest(`${API_BASE_URL}/solicitacoes/${id}`, {
             method: 'DELETE',
