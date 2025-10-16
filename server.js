@@ -53,7 +53,7 @@ app.use(helmet({
         }
     }
 }));
-
+app.set('trust proxy', 1);
 /**
  * Configurações de CORS
  */
