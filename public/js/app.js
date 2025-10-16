@@ -94,29 +94,31 @@ function setupEventListeners() {
 /**
  * Fazer requisições AJAX
  */
+/**
+ * Fazer requisições AJAX
+ */
 async function makeRequest(url, options = {}) {
     try {
         const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-        const defaultHeaders = {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': csrfToken // Adicione o token CSRF aqui
-        };
-
         const defaultOptions = {
-            headers: defaultHeaders
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken // Mantendo o token no header por segurança
+            }
         };
 
-        // Adicione o token ao corpo apenas se for um método que o suporte
-        if (options.method && !['GET', 'HEAD', 'OPTIONS'].includes(options.method.toUpperCase())) {
-            if (options.body) {
-                const bodyData = JSON.parse(options.body);
-                bodyData.csrf_token = csrfToken;
-                options.body = JSON.stringify(bodyData);
-            }
+        const newOptions = { ...defaultOptions, ...options };
+
+        // Para métodos que precisam de proteção CSRF, garanta que o token esteja no corpo.
+        if (newOptions.method && !['GET', 'HEAD', 'OPTIONS'].includes(newOptions.method.toUpperCase())) {
+            // Se já existir um corpo, use-o; senão, crie um objeto vazio.
+            const bodyData = newOptions.body ? JSON.parse(newOptions.body) : {};
+            bodyData.csrf_token = csrfToken; // Adicione o token
+            newOptions.body = JSON.stringify(bodyData); // Reescreva o corpo com o token.
         }
-        
-        const response = await fetch(url, { ...defaultOptions, ...options });
+
+        const response = await fetch(url, newOptions);
         const data = await response.json();
 
         if (!response.ok) {
