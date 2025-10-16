@@ -17,7 +17,6 @@ const PgStore = require('connect-pg-simple')(session);
 
 // Importar módulos locais
 const { pool } = require('./src/config/database'); // Sua conexão com o banco
-const { generateCSRF, errorHandler, requestLogger } = require('./src/middleware/security');
 const { logError } = require('./src/utils/helpers');
 const { testConnection } = require('./src/config/database');
 const apiRoutes = require('./src/routes/api');
