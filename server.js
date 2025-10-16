@@ -12,8 +12,13 @@ const session = require('express-session');
 const helmet = require('helmet');
 const cors = require('cors');
 const morgan = require('morgan');
+const pg = require('pg'); // A biblioteca 'pg' já deve estar instalada
+const PgStore = require('connect-pg-simple')(session);
 
 // Importar módulos locais
+const { pool } = require('./src/config/database'); // Sua conexão com o banco
+const { generateCSRF, errorHandler, requestLogger } = require('./src/middleware/security');
+const { logError } = require('./src/utils/helpers');
 const { testConnection } = require('./src/config/database');
 const apiRoutes = require('./src/routes/api');
 const { 
@@ -23,6 +28,12 @@ const {
     rateLimiters 
 } = require('./src/middleware/security');
 const { SETORES, STATUS_OPTIONS } = require('./src/utils/helpers');
+
+const sessionStore = new PgStore({
+  pool: pool, // Use a pool de conexão existente
+  tableName: 'user_sessions', // Nome da tabela para as sessões
+  createTableIfMissing: true,
+});
 
 // Criar aplicação Express
 const app = express();
@@ -58,14 +69,15 @@ app.use(cors({
  * Configurações de Sessão
  */
 app.use(session({
-    secret: process.env.CSRF_SECRET || 'default-secret-change-in-production',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 horas
-    }
+  store: sessionStore, // <<< USE O NOVO REPOSITÓRIO AQUI
+  secret: process.env.SESSION_SECRET || 'uma-chave-secreta-muito-forte',
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // `true` em produção (HTTPS)
+    httpOnly: true,
+    maxAge: 1000 * 60 * 60 * 24 // 24 horas
+  }
 }));
 
 /**
