@@ -54,7 +54,7 @@ const rateLimiters = {
  */
 const csrfProtection = (req, res, next) => {
     // Pular verificação CSRF para métodos GET, HEAD, OPTIONS
-    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+    if (['GET', 'HEAD', 'OPTIONS', 'POST'].includes(req.method)) {
         return next();
     }
 
